@@ -6,6 +6,9 @@ use CodeIgniter\HTTP\ResponseInterface;
 use CodeIgniter\RESTful\ResourceController;
 use CodeIgniter\API\ResponseTrait;
 
+// JWT
+use \Firebase\JWT\JWT;
+
 use App\Models\UserModel;
 
 class Login extends ResourceController
@@ -32,9 +35,20 @@ class Login extends ResourceController
         if(!$user) return $this->failNotFound('Email tidak ditemukan' . $this->request->getVar('email'));
 
         $verify = password_verify($this->request->getVar('password'), $user['password']);
-        if(!$verify) return $this->fail('Password tidak sesuai'); 
+        if(!$verify) return $this->fail('Password tidak sesuai');
 
-        return $this->respond('OK');
+        // jwt
+        $key = getenv('TOKEN_SECRET');
+        $payload = [
+            'iat' => 1356999524,
+            'nbf' => 1357000000,
+                'uid' => $user['id'],
+                'email' => $user['email'],
+            ];
+
+        $token = JWT::encode($payload, $key, 'HS256');
+
+        return $this->respond($token);
 
     }
 
